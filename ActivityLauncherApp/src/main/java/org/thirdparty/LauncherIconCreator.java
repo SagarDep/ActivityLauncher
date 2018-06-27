@@ -18,7 +18,9 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.widget.Toast;
 
 public class LauncherIconCreator {
@@ -47,13 +49,13 @@ public class LauncherIconCreator {
 		createLauncherIcon(context, intent, pack.getName(), pack.getIconResourceName());	
 	}
 
-	public static void createLauncherIcon(Context context, ComponentName activity, String name, BitmapDrawable icon) {
+	public static void createLauncherIcon(Context context, ComponentName activity, String name, Drawable icon) {
 		Toast.makeText(context, String.format(context.getText(R.string.creating_activity_shortcut).toString(), activity.flattenToShortString()), Toast.LENGTH_LONG).show();
 
 	    Intent shortcutIntent = new Intent();
 	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, getActivityIntent(activity));
 	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_NAME, name);
-	    Bitmap bm = icon.getBitmap();
+	    Bitmap bm = drawableToBitmapDrawable(context, icon).getBitmap();
 	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_ICON, bm);
 	    shortcutIntent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
 	    context.sendBroadcast(shortcutIntent);
@@ -100,5 +102,23 @@ public class LauncherIconCreator {
 			Toast.makeText(context, context.getText(R.string.error).toString() + ": " + e.toString(), Toast.LENGTH_LONG).show();
 		}
 
+	}
+
+	public static BitmapDrawable drawableToBitmapDrawable (Context context, Drawable drawable) {
+		if (drawable instanceof BitmapDrawable) {
+			return (BitmapDrawable)drawable;
+		}
+
+		int width = drawable.getIntrinsicWidth();
+		width = width > 0 ? width : 1;
+		int height = drawable.getIntrinsicHeight();
+		height = height > 0 ? height : 1;
+
+		Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+		Canvas canvas = new Canvas(bitmap);
+		drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+		drawable.draw(canvas);
+
+		return new BitmapDrawable(context.getResources(), bitmap);
 	}
 }

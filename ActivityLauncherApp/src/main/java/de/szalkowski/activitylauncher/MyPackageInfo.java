@@ -7,7 +7,8 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.util.Log;
 
 public class MyPackageInfo implements Comparable<MyPackageInfo> {
 	public MyPackageInfo(PackageInfo info, PackageManager pm, PackageManagerCache cache) {
@@ -16,16 +17,22 @@ public class MyPackageInfo implements Comparable<MyPackageInfo> {
 
 		if(app != null) {
 			this.name = pm.getApplicationLabel(app).toString();
+
+
 			try {
-				this.icon = (BitmapDrawable) pm.getApplicationIcon(app);
+				this.icon = pm.getApplicationIcon(app);
 			}
-			catch(ClassCastException e) {
-				this.icon = (BitmapDrawable)pm.getDefaultActivityIcon();
+			catch(Exception e) {
+				Log.e("MyPackageInfo", e.getMessage(), e);
+			} finally {
+				if (this.icon==null) {
+					this.icon = pm.getDefaultActivityIcon();
+				}
 			}
 			this.icon_resource = app.icon;
 		} else {
 			this.name = info.packageName;
-			this.icon = (BitmapDrawable) pm.getDefaultActivityIcon();
+			this.icon = pm.getDefaultActivityIcon();
 			this.icon_resource = 0;
 		}
 	
@@ -55,7 +62,7 @@ public class MyPackageInfo implements Comparable<MyPackageInfo> {
 			Arrays.sort(this.activities);
 		}
 	}
-	
+
 	private static int countActivitiesFromInfo(PackageInfo info) {
 		int n_activities = 0;
 		for(ActivityInfo activity : info.activities) {
@@ -79,7 +86,7 @@ public class MyPackageInfo implements Comparable<MyPackageInfo> {
 		return package_name;
 	}
 	
-	public BitmapDrawable getIcon() {
+	public Drawable getIcon() {
 		return icon;
 	}
 	
@@ -92,7 +99,7 @@ public class MyPackageInfo implements Comparable<MyPackageInfo> {
 	}
 	
 	protected String package_name;
-	protected BitmapDrawable icon;
+	protected Drawable icon;
 	protected int icon_resource;
 	protected String icon_resource_name;
 	protected String name;
