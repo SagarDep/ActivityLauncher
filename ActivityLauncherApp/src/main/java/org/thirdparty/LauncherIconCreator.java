@@ -23,6 +23,7 @@ import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.Icon;
+import android.os.Build;
 import android.support.v4.content.pm.ShortcutInfoCompat;
 import android.support.v4.content.pm.ShortcutManagerCompat;
 
@@ -43,15 +44,36 @@ public class LauncherIconCreator {
 
 	public static void createLauncherIcon(Context context, MyActivityInfo activity) {
 		final String pack = activity.getIconResouceName().substring(0, activity.getIconResouceName().indexOf(':'));
-		
+
+
+		Log.d("LauncherIconCreator", activity.getComponentName().flattenToString());
+		Log.d("LauncherIconCreator", activity.getName());
+		Log.d("LauncherIconCreator", activity.getIconResouceName());
+
 		// Use bitmap version if icon from different package is used
 //		if(!pack.equals(activity.getComponentName().getPackageName())) {
 //			createLauncherIcon(context, activity.getComponentName(), activity.getName(), activity.getIcon());
 //		} else {
 //			createLauncherIcon(context, activity.getComponentName(), activity.getName(), activity.getIconResouceName());
 //		}
+
+		IconCompat icon;
+
+//		if(pack.equals(activity.getComponentName().getPackageName())) {
+//			icon = null;
+//
+//		} else {
+//			icon = IconCompat.createWithBitmap(drawableToBitmapDrawable(context, activity.getIcon()).getBitmap());
+//
+//		}
+
+
+		icon = IconCompat.createWithBitmap(drawableToBitmapDrawable(context, activity.getIcon()).getBitmap());
+
 		Intent intent = getActivityIntent(activity.getComponentName());
-		createShortcut(context, activity.getName(), intent, pack.equals(activity.getComponentName().getPackageName()), activity.getIcon(), activity.getIconResouce());
+
+
+		createShortcut(context, activity.getName(), intent, icon);
 	}
 
 //	public static void createLauncherIcon(Context context, MyPackageInfo pack) {
@@ -62,7 +84,7 @@ public class LauncherIconCreator {
 //
 //	}
 
-	public static void createShortcut(Context context, String name, Intent intent,  boolean useres, Drawable icon, int icon_resource) {
+	public static void createShortcut(Context context, String name, Intent intent, IconCompat icon) {
 
 		ComponentName cname = intent.getComponent();
 		if (cname==null) return;
@@ -72,19 +94,15 @@ public class LauncherIconCreator {
 		if (ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
 			String shortcutid = "sc_" + intent.getComponent();
 
-			ShortcutInfoCompat.Builder scbuilder = new ShortcutInfoCompat.Builder(context, shortcutid)
+			ShortcutInfoCompat shortcutInfo = new ShortcutInfoCompat.Builder(context, shortcutid)
 					.setIntent(intent)
-					.setShortLabel(name);
+					.setShortLabel(name)
+					.setIcon(icon)
+					.build();
 
-//			if(useres) {
-//				scbuilder.setIcon(icon_resource);
-//			} else {
-//				scbuilder.setIcon(drawableToBitmapDrawable(context, icon).getBitmap());
-//
-//			}
-			scbuilder.setIcon(IconCompat.createWithBitmap(drawableToBitmapDrawable(context, icon).getBitmap()));
 
-			ShortcutInfoCompat shortcutInfo  = scbuilder.build();
+			//scbuilder.setIcon(IconCompat.createWithBitmap(drawableToBitmapDrawable(context, icon).getBitmap()));
+
 			ShortcutManagerCompat.requestPinShortcut(context, shortcutInfo, null);
 		}
 	}
