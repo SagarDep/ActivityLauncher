@@ -17,15 +17,23 @@ import de.szalkowski.activitylauncher.R;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ShortcutInfo;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.Icon;
+import android.support.v4.content.pm.ShortcutInfoCompat;
+import android.support.v4.content.pm.ShortcutManagerCompat;
+
+import android.support.v4.graphics.drawable.IconCompat;
+import android.util.Log;
 import android.widget.Toast;
 
 public class LauncherIconCreator {
 	public static Intent getActivityIntent(ComponentName activity) {
 		Intent intent = new Intent();
+		intent.setAction(Intent.ACTION_MAIN);
 		intent.setComponent(activity);
 	    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 	    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -37,60 +45,94 @@ public class LauncherIconCreator {
 		final String pack = activity.getIconResouceName().substring(0, activity.getIconResouceName().indexOf(':'));
 		
 		// Use bitmap version if icon from different package is used
-		if(!pack.equals(activity.getComponentName().getPackageName())) {
-			createLauncherIcon(context, activity.getComponentName(), activity.getName(), activity.getIcon());
-		} else {
-			createLauncherIcon(context, activity.getComponentName(), activity.getName(), activity.getIconResouceName());
+//		if(!pack.equals(activity.getComponentName().getPackageName())) {
+//			createLauncherIcon(context, activity.getComponentName(), activity.getName(), activity.getIcon());
+//		} else {
+//			createLauncherIcon(context, activity.getComponentName(), activity.getName(), activity.getIconResouceName());
+//		}
+		Intent intent = getActivityIntent(activity.getComponentName());
+		createShortcut(context, activity.getName(), intent, pack.equals(activity.getComponentName().getPackageName()), activity.getIcon(), activity.getIconResouce());
+	}
+
+//	public static void createLauncherIcon(Context context, MyPackageInfo pack) {
+//		Intent intent = context.getPackageManager().getLaunchIntentForPackage(pack.getPackageName());
+//		createLauncherIcon(context, intent, pack.getName(), pack.getIconResourceName());
+//
+//		createShortcut(context, pack.getName(), intent, false, null, pack.getIconResourceName());
+//
+//	}
+
+	public static void createShortcut(Context context, String name, Intent intent,  boolean useres, Drawable icon, int icon_resource) {
+
+		ComponentName cname = intent.getComponent();
+		if (cname==null) return;
+
+		Log.d("ActivityLauncher", String.format(context.getText(R.string.creating_activity_shortcut).toString(), cname.flattenToShortString()));
+		Toast.makeText(context, String.format(context.getText(R.string.creating_activity_shortcut).toString(), cname.flattenToShortString()), Toast.LENGTH_LONG).show();
+		if (ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
+			String shortcutid = "sc_" + intent.getComponent();
+
+			ShortcutInfoCompat.Builder scbuilder = new ShortcutInfoCompat.Builder(context, shortcutid)
+					.setIntent(intent)
+					.setShortLabel(name);
+
+//			if(useres) {
+//				scbuilder.setIcon(icon_resource);
+//			} else {
+//				scbuilder.setIcon(drawableToBitmapDrawable(context, icon).getBitmap());
+//
+//			}
+			scbuilder.setIcon(IconCompat.createWithBitmap(drawableToBitmapDrawable(context, icon).getBitmap()));
+
+			ShortcutInfoCompat shortcutInfo  = scbuilder.build();
+			ShortcutManagerCompat.requestPinShortcut(context, shortcutInfo, null);
 		}
 	}
 
-	public static void createLauncherIcon(Context context, MyPackageInfo pack) {
-		Intent intent = context.getPackageManager().getLaunchIntentForPackage(pack.getPackageName());
-		createLauncherIcon(context, intent, pack.getName(), pack.getIconResourceName());	
-	}
-
-	public static void createLauncherIcon(Context context, ComponentName activity, String name, Drawable icon) {
-		Toast.makeText(context, String.format(context.getText(R.string.creating_activity_shortcut).toString(), activity.flattenToShortString()), Toast.LENGTH_LONG).show();
-
-	    Intent shortcutIntent = new Intent();
-	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, getActivityIntent(activity));
-	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_NAME, name);
-	    Bitmap bm = drawableToBitmapDrawable(context, icon).getBitmap();
-	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_ICON, bm);
-	    shortcutIntent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
-	    context.sendBroadcast(shortcutIntent);
-	    //finish();
-	}
-	
-	public static void createLauncherIcon(Context context, ComponentName activity, String name, String icon_resource_name) {
-		Toast.makeText(context, String.format(context.getText(R.string.creating_activity_shortcut).toString(), activity.flattenToShortString()), Toast.LENGTH_LONG).show();
-
-	    Intent shortcutIntent = new Intent();
-	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, getActivityIntent(activity));
-	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_NAME, name);
-	    Intent.ShortcutIconResource ir = new Intent.ShortcutIconResource();
-	    ir.packageName = activity.getPackageName();
-	    ir.resourceName = icon_resource_name;
-	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, ir);
-	    shortcutIntent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
-	    context.sendBroadcast(shortcutIntent);
-	    //finish();
-	}
-	
-	public static void createLauncherIcon(Context context, Intent intent, String name, String icon_resource_name) {
-		Toast.makeText(context, String.format(context.getText(R.string.creating_application_shortcut).toString(), name), Toast.LENGTH_LONG).show();
-
-	    Intent shortcutIntent = new Intent();
-	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, intent);
-	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_NAME, name);
-	    Intent.ShortcutIconResource ir = new Intent.ShortcutIconResource();
-	    ir.packageName = intent.getPackage();
-	    ir.resourceName = icon_resource_name;
-	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, ir);
-	    shortcutIntent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
-	    context.sendBroadcast(shortcutIntent);
-	    //finish();
-	}
+//	public static void createLauncherIcon(Context context, ComponentName activity, String name, Drawable icon) {
+//		Toast.makeText(context, String.format(context.getText(R.string.creating_activity_shortcut).toString(), activity.flattenToShortString()), Toast.LENGTH_LONG).show();
+//
+//	    Intent shortcutIntent = new Intent();
+//	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, getActivityIntent(activity));
+//	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_NAME, name);
+//	    Bitmap bm = drawableToBitmapDrawable(context, icon).getBitmap();
+//	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_ICON, bm);
+//	    shortcutIntent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
+//	    context.sendBroadcast(shortcutIntent);
+//	    //finish();
+//	}
+//
+//	public static void createLauncherIcon(Context context, ComponentName activity, String name, String icon_resource_name) {
+//		Toast.makeText(context, String.format(context.getText(R.string.creating_activity_shortcut).toString(), activity.flattenToShortString()), Toast.LENGTH_LONG).show();
+//
+//	    Intent shortcutIntent = new Intent();
+//	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, getActivityIntent(activity));
+//	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_NAME, name);
+//	    Intent.ShortcutIconResource ir = new Intent.ShortcutIconResource();
+//	    ir.packageName = activity.getPackageName();
+//	    ir.resourceName = icon_resource_name;
+//	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, ir);
+//	    shortcutIntent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
+//	    context.sendBroadcast(shortcutIntent);
+//	    //finish();
+//	}
+//
+////
+////
+//	public static void createLauncherIcon(Context context, Intent intent, String name, String icon_resource_name) {
+//		Toast.makeText(context, String.format(context.getText(R.string.creating_application_shortcut).toString(), name), Toast.LENGTH_LONG).show();
+//
+//	    Intent shortcutIntent = new Intent();
+//	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, intent);
+//	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_NAME, name);
+//	    Intent.ShortcutIconResource ir = new Intent.ShortcutIconResource();
+//	    ir.packageName = intent.getPackage();
+//	    ir.resourceName = icon_resource_name;
+//	    shortcutIntent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, ir);
+//	    shortcutIntent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
+//	    context.sendBroadcast(shortcutIntent);
+//	    //finish();
+//	}
 	
 	public static void launchActivity(Context context, ComponentName activity) {
 		Intent intent = LauncherIconCreator.getActivityIntent(activity);

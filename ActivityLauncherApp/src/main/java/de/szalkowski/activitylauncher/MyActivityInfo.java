@@ -51,11 +51,15 @@ public class MyActivityInfo implements Comparable<MyActivityInfo> {
 	public String getName() {
 		return name;
 	}
-	
+
 	public String getIconResouceName() {
 		return icon_resource_name;
 	}
-	
+
+	public int getIconResouce() {
+		return icon_resource;
+	}
+
 	protected ComponentName component_name;
 	protected Drawable icon;
 	protected int icon_resource;

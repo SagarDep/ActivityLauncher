@@ -109,7 +109,7 @@ public class AllTasksListFragment extends Fragment implements AllTasksListAsyncP
 			MyPackageInfo pack = (MyPackageInfo) list.getExpandableListAdapter().getGroup(ExpandableListView.getPackedPositionGroup(info.packedPosition));
 			switch(item.getItemId()) {
 			case 0:
-				LauncherIconCreator.createLauncherIcon(getActivity(), pack);
+				LauncherIconCreator.createLauncherIcon(getActivity(), pack.getActivity(0));
 				break;
 			case 1:
 				PackageManager pm = getActivity().getPackageManager();
